@@ -1,5 +1,5 @@
-from faster_whisper import WhisperModel
 from __future__ import annotations
+from faster_whisper import WhisperModel
 import json, subprocess, os
 from pathlib import Path
 
@@ -33,7 +33,8 @@ def main():
     # Transcribe (faster-whisper -> segments with timestamps)
     model = WhisperModel("base", device="cpu", compute_type="int8")
     segments = []
-    for seg in model.transcribe(str(src), beam_size=5)[0]:
+    segments_gen, info = model.transcribe(str(src), beam_size=5)
+    for seg in segments_gen:
         segments.append({
             "start": float(seg.start),
             "end": float(seg.end),
