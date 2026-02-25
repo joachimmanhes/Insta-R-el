@@ -1,3 +1,4 @@
+from faster_whisper import WhisperModel
 from __future__ import annotations
 import json, subprocess, os
 from pathlib import Path
@@ -29,13 +30,15 @@ def main():
     # Download (only if you have rights)
     sh(["yt-dlp","-f","bv*+ba/b","--merge-output-format","mp4","-o",str(src),url])
 
-    # Transcribe (Whisper -> JSON with segments/timestamps)
-    sh(["python","-m","whisper",str(src),"--model","base","--task","transcribe","--output_format","json","--output_dir",str(work)])
-
-    # Whisper output file name varies; grab the first json
-    wjson = next(work.glob("source*.json"))
-    data = json.loads(wjson.read_text(encoding="utf-8"))
-    segments = data.get("segments", [])
+    # Transcribe (faster-whisper -> segments with timestamps)
+    model = WhisperModel("base", device="cpu", compute_type="int8")
+    segments = []
+    for seg in model.transcribe(str(src), beam_size=5)[0]:
+        segments.append({
+            "start": float(seg.start),
+            "end": float(seg.end),
+            "text": seg.text.strip(),
+        })
 
     # Build candidate windows (~35s) and score them
     WIN = 35.0
