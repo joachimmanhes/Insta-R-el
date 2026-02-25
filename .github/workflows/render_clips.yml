@@ -23,11 +23,23 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ffmpeg
 
-      - name: Install yt-dlp
+      - name: Install dependencies
         run: |
-          pip install yt-dlp requests
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-      - name: Print payload
+      - name: Run worker
         run: |
-          echo "Payload received:"
-          cat $GITHUB_EVENT_PATH
+          python worker/render.py
+
+      - name: Upload clips
+        uses: actions/upload-artifact@v4
+        with:
+          name: clips
+          path: out/*.mp4
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: report
+          path: out/report.json
